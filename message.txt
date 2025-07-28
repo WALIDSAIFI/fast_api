@@ -1,0 +1,499 @@
+### **What is JPA Repository?**
+
+The **JPA Repository** is a part of the **Spring Data JPA** module that provides an abstraction over data access layers, simplifying the implementation of database interactions. It is a specialized interface in Spring Data JPA that extends **CrudRepository** and **PagingAndSortingRepository** to provide additional JPA-related functionality, such as:
+
+- Query methods based on method names.
+- Pagination and sorting support.
+- Built-in implementations for CRUD operations.
+- Integration with JPQL and native SQL queries.
+
+### **What Does It Return?**
+
+The **JPA Repository** methods return various types based on the operation:
+
+- **Entity Objects**: For methods like `findById()` or custom query methods (e.g., `findByName()`).
+- **List of Entities**: For queries returning multiple results (e.g., `findAll()` or `findByStatus()`).
+- **Optional<Entity>**: For methods returning a single, potentially absent entity (e.g., `findById()`).
+- **Custom DTOs or projections**: When specified in custom query methods using JPQL or projections.
+
+### **What Can We Exchange It With?**
+
+If you are not using JPA Repository, you can:
+
+- **Manually Use JPA/EntityManager**: Write JPQL or native queries using the `EntityManager` API.
+- **JdbcTemplate**: For SQL-based database interactions.
+- **Hibernate Query API**: Directly work with Hibernate Session.
+- **Custom Repositories**: Implement your repository interface manually and define the required database logic.
+
+---
+
+### **What is a DTO (Data Transfer Object)?**
+
+A **DTO (Data Transfer Object)** is an object used to encapsulate and transfer data between layers (e.g., from the service layer to the presentation layer). It is a lightweight object designed to:
+
+- Simplify the data structure sent to clients.
+- Expose only the required attributes while hiding sensitive data.
+- Optimize serialization and reduce payload size.
+
+---
+
+### **What is the Difference Between DTO and DTO VM?**
+
+- **DTO (Data Transfer Object)**: Purely designed to transfer data between layers without any logic or extra information. It represents the data model needed for a specific operation or response.
+- **DTO VM (ViewModel)**: Extends the concept of DTO but is specific to the view layer (UI). It can include additional fields or computed values required for rendering the UI, making it tailored for the presentation layer.
+
+---
+
+### **What is the Use of DTO?**
+
+The main uses of DTO include:
+
+1. **Encapsulation**: Grouping related data for transfer.
+2. **Security**: Preventing exposure of sensitive entity fields.
+3. **Decoupling**: Separating domain models from API-specific or UI-specific requirements.
+4. **Efficiency**: Reducing payload size by transferring only the required data.
+
+---
+
+### **What is a Starter in Spring Boot?**
+
+A **Starter** in Spring Boot is a set of pre-configured dependencies designed to simplify the setup of a Spring application. It bundles common dependencies required for a specific feature, reducing the need for manual dependency management.
+
+For example:
+
+- **spring-boot-starter-web**: Includes dependencies for web development, such as Spring MVC, Tomcat, and validation.
+- **spring-boot-starter-data-jpa**: Includes dependencies for JPA and Hibernate.
+
+---
+
+### **What Does Spring Web Bring as a Dependency?**
+
+The **spring-boot-starter-web** brings the following dependencies:
+
+1. **Spring MVC**: For building RESTful APIs and web applications.
+2. **Embedded Tomcat**: For running the application as a web server.
+3. **Jackson**: For JSON serialization and deserialization.
+4. **Validation API**: For request data validation (e.g., Hibernate Validator).
+5. **Other Utilities**: Includes essential Spring libraries for handling HTTP requests, responses, and exceptions.
+
+---
+
+### **1. Comment fonctionne RestController Advice (avec AOP)?**
+
+- **Concept** : `@RestControllerAdvice` est une spécialisation de `@ControllerAdvice`. Elle est utilisée pour gérer globalement les exceptions dans les applications REST.
+- **AOP (Aspect-Oriented Programming)** :
+    - Spring utilise un **aspect** qui intercepte les appels de méthode des contrôleurs.
+    - Les conseils définis dans `@RestControllerAdvice` s'appliquent avant ou après l'exécution des méthodes.
+- **Exemple** :
+
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
+        return new ResponseEntity<>("Resource not found: " + ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleGeneralException(Exception ex) {
+        return new ResponseEntity<>("An error occurred: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+```
+
+- Ici, toute exception interceptée par un contrôleur REST est traitée par l'aspect défini.
+
+---
+
+### **2. Inversion of Control (IoC)**
+
+- **Définition** : Le contrôle de la création et de la gestion des objets est inversé (au lieu d'utiliser `new`, Spring gère cela).
+- **Exemple pratique** :
+    - Avec IoC :
+        
+        ```java
+        @Service
+        public class MyService {
+            private final MyRepository repository;
+        
+            @Autowired
+            public MyService(MyRepository repository) {
+                this.repository = repository; // Injecté automatiquement.
+            }
+        }
+        ```
+        
+    - Sans IoC :
+        
+        ```java
+        public class MyService {
+            private final MyRepository repository = new MyRepository(); // Couplage fort.
+        }
+        ```
+        
+
+---
+
+### **3. Starters et leurs types**
+
+- **Starters** : Groupes de dépendances pour faciliter le démarrage rapide.
+- **Exemples :**
+    - `spring-boot-starter-web` : Spring MVC, Jackson, Tomcat.
+    - `spring-boot-starter-data-jpa` : Hibernate, JPA.
+    - `spring-boot-starter-security` : Authentification et autorisation.
+    - `spring-boot-starter-test` : JUnit, Mockito, Spring Test.
+- **Personnalisés** : Vous pouvez créer vos propres starters en combinant des dépendances communes dans un module.
+
+---
+
+### **4. Spring Data JPA**
+
+- **Fonctionnalité** :
+    - Simplifie les interactions avec la base de données via JPA.
+    - Permet des **méthodes de requêtes** basées sur des noms, comme `findByName`.
+    - Supporte les requêtes personnalisées avec **@Query**.
+- **Exemple** :
+
+```java
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findByRole(String role);
+
+    @Query("SELECT u FROM User u WHERE u.status = :status")
+    List<User> findByStatus(@Param("status") String status);
+}
+```
+
+---
+
+### **5. Différents mocks**
+
+- **Mockito** (le plus utilisé) :
+    - Simule les dépendances pendant les tests unitaires.
+    - Exemple :
+        
+        ```java
+        @Mock
+        private MyRepository repository;
+        
+        @Test
+        public void testService() {
+            Mockito.when(repository.findById(1L)).thenReturn(Optional.of(new MyEntity()));
+            // Valider la logique
+        }
+        ```
+        
+- **Spy** : Partiellement réel et partiellement simulé.
+- **Stub** : Implémente un comportement défini pour une méthode.
+
+---
+
+### **6. Spring Scopes**
+
+- **Singleton** : Une instance unique dans le conteneur Spring.
+- **Prototype** : Nouvelle instance créée à chaque demande.
+- **Request** : Une instance par requête HTTP.
+- **Session** : Une instance par session utilisateur.
+- **Application** : **application scope** refers to a **lifecycle and visibility** context in which certain objects or data are available across the entire application and shared among all users and requests.
+- **Custom Scope** : Vous pouvez définir vos propres scopes personnalisés.
+
+---
+
+### **7. Containers**
+
+- **BeanFactory** : Conteneur de base, utilisé rarement (manque de fonctionnalités avancées).
+- **ApplicationContext** :
+    - Étend `BeanFactory`.
+    - Supporte l'AOP, l'internationalisation et les événements d'application.
+
+---
+
+### **8. Annotations JPA**
+
+- `@Entity` : Indique qu'une classe est une entité.
+- `@Table` : Définit le nom de la table.
+- `@Id` et `@GeneratedValue` : Définit la clé primaire et sa génération.
+- `@OneToMany`, `@ManyToOne` : Gestion des relations.
+- **Exemple** :
+
+```java
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name")
+    private String name;
+
+    @OneToMany(mappedBy = "user")
+    private List<Order> orders;
+}
+```
+
+---
+
+### **9. Annotations Spring (@Qualifier, etc.)**
+
+- **@Qualifier** : Résout les conflits quand plusieurs beans sont candidats.
+- **@Primary** : Définit le bean par défaut pour une injection.
+- **@Component, @Service, @Repository** : Différents types de beans gérés par Spring.
+
+---
+
+### **10. Cycle de vie Maven**
+
+- Phases principales :
+    - **clean** : Supprime les fichiers générés.
+    - **compile** : Compile le code source.
+    - **test** : Exécute les tests unitaires.
+    - **package** : Emballe l'application (JAR/WAR).
+    - **install** : Installe le package dans le dépôt local.
+    - **deploy** : Déploie dans un dépôt distant.
+
+---
+
+### **11. Cycle de vie d’un Bean**
+
+- Étapes :
+    1. **Instantiation** : Création du bean.
+    2. **Populating Properties** : Injection des dépendances.
+    3. **Post Initialization** : Appel des méthodes `@PostConstruct`.
+    4. **Ready** : Le bean est prêt à être utilisé.
+    5. **Destruction** : Appel des méthodes `@PreDestroy`.
+
+---
+
+### **12. Application.yml**
+
+- Configure les paramètres comme la base de données.
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/ma_db
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+```
+
+---
+
+### **13. Docker**
+
+- Outil de conteneurisation qui permet d'exécuter des applications de manière isolée.
+- **Avantages** :
+    - Portabilité (exécution sur n'importe quelle machine avec Docker installé).
+    - Isolation.
+    - Déploiement rapide.
+
+---
+
+### **14. Dependency Injection (DI)**
+
+- Injection de dépendances gérées par le conteneur Spring.
+- Méthodes :
+    - **Par constructeur** (recommandé).
+    - **Par setter**.
+    - **Par champ (@Autowired)**.
+
+---
+
+### **15. Couplage Fort**
+
+- Lorsque deux classes dépendent fortement l'une de l'autre.
+- **Exemple** (Couplage fort) :
+    
+    ```java
+    public class Service {
+        private final Repository repo = new Repository(); // Pas flexible.
+    
+    ```
+    
+
+---
+
+### **16. JPA Repository Arbre**
+
+- **Interfaces principales** :
+    - `CrudRepository` : CRUD de base.
+    - `PagingAndSortingRepository` : Ajoute pagination et tri.
+    - `JpaRepository` : Avancé avec des fonctionnalités spécifiques JPA.
+
+---
+
+### **17. Criteria API**
+
+- **Critères dynamiques** pour les requêtes complexes.
+
+```java
+CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+CriteriaQuery<User> query = cb.createQuery(User.class);
+Root<User> root = query.from(User.class);
+query.select(root).where(cb.equal(root.get("name"), "John"));
+```
+
+---
+
+### **18. Validation**
+
+- **Annotations** :
+    - `@NotNull`, `@Size`, `@Email`, etc.
+- Validateur intégré via **Hibernate Validator**.
+
+---
+
+### **1. Hibernate et JPA**
+
+- **Hibernate** :
+    - Un framework ORM (Object-Relational Mapping) qui simplifie la manipulation des bases de données en mappant les classes Java aux tables SQL.
+    - Il fournit des fonctionnalités avancées comme la mise en cache, les requêtes HQL (Hibernate Query Language), et la gestion des transactions.
+- **JPA (Java Persistence API)** :
+    - Une spécification standard pour la persistance des données en Java.
+    - Hibernate est une **implémentation de JPA**, parmi d'autres comme EclipseLink.
+- **Différences** :
+    - **JPA** : Interface standard.
+    - **Hibernate** : Implémentation spécifique avec des fonctionnalités supplémentaires.
+- **Exemple d’utilisation** :
+
+```java
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+}
+
+```
+
+---
+
+### **2. Exceptions (Checked vs. Unchecked)**
+
+- **Checked Exceptions** :
+    - Sont vérifiées à la compilation.
+    - Doivent être soit capturées (`try-catch`), soit déclarées dans la signature de la méthode (`throws`).
+    - **Exemple** : `IOException`, `SQLException`.
+- **Unchecked Exceptions** :
+    - Ne sont pas vérifiées à la compilation.
+    - Provoquent des erreurs à l'exécution si elles ne sont pas gérées.
+    - **Exemple** : `NullPointerException`, `IllegalArgumentException`.
+- **Quand utiliser ?** :
+    - Utilisez les **checked exceptions** pour les erreurs que le programme peut raisonnablement récupérer.
+    - Les **unchecked exceptions** pour indiquer des bugs ou des erreurs inattendues.
+
+---
+
+### **3. Les Tests**
+
+- **Types principaux** :
+    - **Tests unitaires** : Tester des méthodes ou des classes spécifiques.
+        - Outils : JUnit, TestNG.
+        - Exemple :
+            
+            ```java
+            @Test
+            public void testAddition() {
+                int result = Calculator.add(2, 3);
+                assertEquals(5, result);
+            }
+            
+            ```
+            
+    - **Tests d’intégration** : Vérifier l’interaction entre plusieurs composants.
+    - **Tests fonctionnels** : Valider une fonctionnalité du point de vue utilisateur.
+- **Meilleures pratiques** :
+    - Utilisez des **mocks** pour simuler les dépendances (ex. : avec Mockito).
+    - Gardez les tests unitaires rapides.
+    - Nommez clairement vos méthodes de test.
+
+---
+
+### **4. Cycle de vie Maven**
+
+1. **Phases de cycle de vie standard** :
+    - `validate` : Valide le projet.
+    - `compile` : Compile le code source.
+    - `test` : Exécute les tests unitaires.
+    - `package` : Emballe l’application en JAR ou WAR.
+    - `verify` : Vérifie les critères de qualité.
+    - `install` : Installe l’artifact dans le dépôt local.
+    - `deploy` : Déploie l’artifact dans un dépôt distant.
+2. **Exemple d’utilisation** :
+    - Commande pour compiler : `mvn compile`.
+    - Commande pour créer un JAR : `mvn package`.
+
+---
+
+### **5. Exceptions Handler dans Spring**
+
+Les gestionnaires d'exceptions dans Spring permettent de centraliser le traitement des erreurs. Voici une reprise avec plus de détails :
+
+- **@ExceptionHandler** :
+    - À utiliser dans un contrôleur spécifique ou dans une classe annotée avec `@ControllerAdvice`.
+    - Exemple avancé :
+        
+        ```java
+        @RestControllerAdvice
+        public class GlobalExceptionHandler {
+        
+            @ExceptionHandler(ResourceNotFoundException.class)
+            public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
+                ErrorResponse error = new ErrorResponse("NOT_FOUND", ex.getMessage());
+                return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            }
+        
+            @ExceptionHandler(Exception.class)
+            public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
+                ErrorResponse error = new ErrorResponse("INTERNAL_SERVER_ERROR", "Une erreur est survenue.");
+                return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        
+        ```
+        
+    - **ErrorResponse** est une classe DTO pour structurer les réponses d'erreur.
+
+---
+
+### **6. Spring IoC**
+
+- **Définition** :
+    - Inversion of Control signifie que Spring gère les dépendances et leur cycle de vie.
+- **Conteneurs IoC** :
+    - **BeanFactory** : Conteneur léger, utilisé rarement.
+    - **ApplicationContext** : Conteneur avancé avec des fonctionnalités comme AOP, internationalisation, et gestion d’événements.
+- **Exemple IoC avec DI** :
+    
+    ```java
+    @Service
+    public class MyService {
+        private final MyRepository repository;
+    
+        public MyService(MyRepository repository) {
+            this.repository = repository; // Injecté par Spring
+        }
+    }
+    
+    ```
+    
+
+---
+
+### **7. Conteneurs autres que IoC dans Spring**
+
+1. **Servlet Container** :
+    - Gère les requêtes HTTP et exécute les applications web.
+    - Exemple : Tomcat, Jetty.
+2. **WebApplicationContext** :
+    - Étend `ApplicationContext` pour les applications web.
+    - Crée des beans spécifiques à une application web, comme les contrôleurs.
+3. **Session Scoped Container** :
+    - Permet de maintenir l'état d'un bean par session utilisateur.
